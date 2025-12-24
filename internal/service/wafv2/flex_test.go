@@ -221,3 +221,76 @@ func TestExpandStatement_RateBased_ScopeDown_Not_IPSet(t *testing.T) {
 		t.Errorf("Unexpected ARN")
 	}
 }
+
+func TestExpandStatement_DeepNesting(t *testing.T) {
+	// Nesting level 6: Not -> Not -> Not -> Not -> Not -> Statement -> IPSet
+	input := map[string]any{
+		"not_statement": []any{
+			map[string]any{
+				"statement": []any{
+					map[string]any{
+						"not_statement": []any{
+							map[string]any{
+								"statement": []any{
+									map[string]any{
+										"not_statement": []any{
+											map[string]any{
+												"statement": []any{
+													map[string]any{
+														"not_statement": []any{
+															map[string]any{
+																"statement": []any{
+																	map[string]any{
+																		"not_statement": []any{
+																			map[string]any{
+																				"statement": []any{
+																					map[string]any{
+																						"ip_set_reference_statement": []any{
+																							map[string]any{
+																								names.AttrARN: "arn:aws:wafv2:us-east-1:123456789012:regional/ipset/test/123",
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	stmt := expandStatement(input)
+
+	if stmt == nil {
+		t.Fatal("Expected statement, got nil")
+	}
+
+	// Check deepest statement
+	s := stmt
+	for i := 0; i < 5; i++ {
+		if s.NotStatement == nil {
+			t.Fatalf("Level %d NotStatement is nil", i)
+		}
+		if s.NotStatement.Statement == nil {
+			t.Fatalf("Level %d Statement is nil", i)
+		}
+		s = s.NotStatement.Statement
+	}
+
+	if s.IPSetReferenceStatement == nil {
+		t.Fatal("Deepest IPSetReferenceStatement is nil")
+	}
+}

@@ -4,6 +4,6 @@
 package wafv2
 
 const (
-	ruleGroupRootStatementSchemaLevel = 5
-	webACLRootStatementSchemaLevel    = 5
+	ruleGroupRootStatementSchemaLevel = 10
+	webACLRootStatementSchemaLevel    = 10
 )
